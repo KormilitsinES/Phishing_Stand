@@ -1,0 +1,2 @@
+/^X-Mailer:.*gophish/i  REPLACE X-Mailer: Microsoft Outlook 16.0
+/^X-Gophish-/i  IGNORE

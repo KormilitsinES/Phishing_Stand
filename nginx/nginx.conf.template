@@ -1,0 +1,59 @@
+events {
+    worker_connections 1024;
+}
+
+stream {
+    map $ssl_preread_server_name $backend_name {
+        ${EVIL_DOMAIN} evilginx_backend;
+        default gophish_track_backend;
+    }
+
+    upstream evilginx_backend {
+        server evilginx2:443;
+    }
+
+    upstream gophish_track_backend {
+        server gophish:8080;
+    }
+
+    server {
+        listen 443;
+        proxy_pass $backend_name;
+        ssl_preread on;
+
+        location ^~ /.well-known/mta-sts.txt {
+                alias /var/www/html/mta-sts.txt;
+        }
+    }
+}
+
+http {
+    include /etc/nginx/mime.types;
+    default_type    application/octet-stream;
+
+    server {
+        listen 80;
+        server_name _;
+        return 301 https://$host$request_uri;
+    }
+
+    server {
+        listen 443 ssl;
+        server_name ${TRACK_DOMAIN};
+
+        ssl_certificate ${TLS_CERT_FILE};
+        ssl_certificate_key ${TLS_KEY_FILE};
+
+        location / {
+            proxy_pass http://gophish:8080;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+
+        location ^~ /.well-known/mta-sts.txt {
+                alias /var/www/html/mta-sts.txt;
+        }
+    }
+}

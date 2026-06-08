@@ -1,0 +1,84 @@
+version: '3.8'
+
+networks:
+  phishing-net:
+    driver: bridge
+
+services:
+  nginx:
+    build: ./nginx
+    container_name: phishing-nginx
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      - TRACK_DOMAIN=${TRACK_DOMAIN}
+      - EVIL_DOMAIN=${EVIL_DOMAIN}
+      - MX_DOMAIN=${MX_DOMAIN}
+      - TLS_CERT_FILE=/etc/nginx/certs/fullchain.pem
+      - TLS_KEY_FILE=/etc/nginx/certs/privkey.pem
+    volumes:
+      - ./certs/live/${BASE_DOMAIN}/fullchain.pem:/etc/nginx/certs/fullchain.pem:ro
+      - ./certs/live/${BASE_DOMAIN}/privkey.pem:/etc/nginx/certs/privkey.pem:ro
+    networks:
+      - phishing-net
+    depends_on:
+      - gophish
+      - evilginx2
+
+  postfix:
+    build: ./postfix
+    container_name: phishing-postfix
+    restart: unless-stopped
+    environment:
+      - HOSTNAME=${BASE_DOMAIN}
+      - ALLOWED_SENDER_DOMAINS=${MX_DOMAIN}
+      - DKIM_AUTOGENERATE=true
+      - SMTPD_TLS_CERT_FILE=/etc/postfix/certs/fullchain.pem
+      - SMTPD_TLS_KEY_FILE=/etc/postfix/certs/privkey.pem
+    volumes:
+      - ./postfix/dkim:/etc/opendkim/keys:rw
+      - ./certs/live/${BASE_DOMAIN}/fullchain.pem:/etc/postfix/certs/fullchain.pem:ro
+      - ./certs/live/${BASE_DOMAIN}/privkey.pem:/etc/postfix/certs/privkey.pem:ro
+    networks:
+      - phishing-net
+    depends_on:
+      - milter
+
+  milter:
+    build: ./milter
+    container_name: phishing-milter
+    restart: unless-stopped
+    networks:
+      - phishing-net
+
+  gophish:
+    image: gophish/gophish:latest
+    container_name: phishing-gophish
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3333:3333"
+    volumes:
+      - ./gophish/config.json:/opt/gophish/config.json:ro
+      - ./gophish/gophish.db:/opt/gophish/gophish.db
+      - ./certs/live/${BASE_DOMAIN}/fullchain.pem:/opt/gophish/certs/cert.pem:ro
+      - ./certs/live/${BASE_DOMAIN}/privkey.pem:/opt/gophish/certs/key.pem:ro
+    networks:
+      - phishing-net
+    depends_on:
+      - postfix
+
+  evilginx2:
+    build: ./evilginx2
+    container_name: phishing-evilginx2
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:33333:33333" # Порт управления evilginx тоже закрываем на localhost
+    volumes:
+      - ./evilginx2/phishlets:/app/phishlets:ro
+      - ./evilginx2/data:/app/.evilginx
+      - ./certs/live/${BASE_DOMAIN}/fullchain.pem:/app/.evilginx/crt/${BASE_DOMAIN}.crt:ro
+      - ./certs/live/${BASE_DOMAIN}/privkey.pem:/app/.evilginx/crt/${BASE_DOMAIN}.key:ro
+    networks:
+      - phishing-net

@@ -1,0 +1,5 @@
+certs/*
+docker-compose.yml
+TODO
+.idea
+.venv
