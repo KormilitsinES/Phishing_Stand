@@ -28,6 +28,15 @@ MX_DOMAIN=${MX_DOMAIN:-mail.$BASE_DOMAIN}
 read -p "Введите Email для Let's Encrypt: " ADMIN_EMAIL
 ADMIN_EMAIL=${ADMIN_EMAIL:-support@$BASE_DOMAIN}
 
+read -p "Введите название для контейнера с GoPhish: [mailer-app]" GOPHISH_BACKEND
+GOPHISH_BACKEND=${GOPHISH_BACKEND:-mailer-app}
+
+read -p "Введите название для контейнера с Postfix: [mailer]" POSTFIX_BACKEND
+POSTFIX_BACKEND=${POSTFIX_BACKEND:-mailer}
+
+read -p "Введите название для контейнера с Evilginx2: [evilginx2]" EVILGINX_BACKEND
+EVILGINX_BACKEND=${EVILGINX_BACKEND:-evilginx2}
+
 VPS_IP=$(curl -s https://api.ipify.org)
 if [ -z "$VPS_IP" ]; then
   echo -e "${RED}[-] Не удалось определить внешний IP адрес VPS.${NC}"
@@ -41,6 +50,9 @@ TRACK_DOMAIN=$TRACK_DOMAIN
 EVIL_DOMAIN=$EVIL_DOMAIN
 MX_DOMAIN=$MX_DOMAIN
 ADMIN_EMAIL=$ADMIN_EMAIL
+GOPHISH_BACKEND=${GOPHISH_BACKEND}
+POSTFIX_BACKEND=${POSTFIX_BACKEND}
+EVILGINX_BACKEND=${EVILGINX_BACKEND}
 VPS_IP=$VPS_IP
 EOF
 
@@ -50,6 +62,6 @@ if [ ! -f "docker-compose.yml.template" ]; then
   exit 1
 fi
 
-export BASE_DOMAIN TRACK_DOMAIN EVIL_DOMAIN MX_DOMAIN ADMIN_EMAIL
+export BASE_DOMAIN TRACK_DOMAIN EVIL_DOMAIN MX_DOMAIN ADMIN_EMAIL GOPHISH_BACKEND POSTFIX_BACKEND EVILGINX_BACKEND
 envsubst < docker-compose.yml.template > docker-compose.yml
 echo -e "${GREEN}[+] docker-compose.yml успешно сгенерирован.${NC}"

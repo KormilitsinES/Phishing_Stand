@@ -12,7 +12,7 @@ services:
 
   postfix:
     build: ./postfix
-    container_name: mailer
+    container_name: ${POSTFIX_BACKEND}
     hostname: mx01.${BASE_DOMAIN}
     restart: unless-stopped
     environment:
@@ -29,7 +29,7 @@ services:
 
   gophish:
     image: gophish/gophish:latest
-    container_name: mailer-app
+    container_name: ${GOPHISH_BACKEND}
     hostname: mx02.${BASE_DOMAIN}
     restart: unless-stopped
     ports:
@@ -46,7 +46,7 @@ services:
 
   evilginx2:
     build: ./evilginx2
-    container_name: evilginx2
+    container_name: ${EVILGINX_BACKEND}
     restart: unless-stopped
     stdin_open: true
     tty: true
@@ -72,6 +72,8 @@ services:
       - EVIL_DOMAIN=${EVIL_DOMAIN}
       - MX_DOMAIN=${MX_DOMAIN}
       - BASE_DOMAIN=${BASE_DOMAIN}
+      - EVILGINX_BACKEND=${EVILGINX_BACKEND}
+      - GOPHISH_BACKEND=${GOPHISH_BACKEND}
     volumes:
       - ./certs/live/${BASE_DOMAIN}/fullchain.pem:/etc/nginx/certs/fullchain.pem:ro
       - ./certs/live/${BASE_DOMAIN}/privkey.pem:/etc/nginx/certs/privkey.pem:ro

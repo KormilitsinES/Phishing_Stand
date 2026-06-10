@@ -3,7 +3,7 @@
 set -e
 
 echo "[*] Шаблонизация nginx.conf с использованием переменных окружения..."
-envsubst '${TRACK_DOMAIN} ${EVIL_DOMAIN} ${BASE_DOMAIN}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
+envsubst '${TRACK_DOMAIN} ${EVIL_DOMAIN} ${BASE_DOMAIN} ${EVILGINX_BACKEND} ${GOPHISH_BACKEND}' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 echo "[+] nginx.conf успешно сгенерирован для доменов ${TRACK_DOMAIN}, ${EVIL_DOMAIN} и ${BASE_DOMAIN}."
 
 echo "[*] Шаблонизация mta-sts.txt с использованием переменных окружения..."

@@ -6,16 +6,16 @@ stream {
     map $ssl_preread_server_name $backend_name {
         ${EVIL_DOMAIN} evilginx_backend;
         ${TRACK_DOMAIN} gophish_backend;
-        ${BASE_DOMAIN} nginx_http_backend
+        ${BASE_DOMAIN} nginx_http_backend;
         default gophish_backend;
     }
 
     upstream evilginx_backend {
-        server evilginx2:443;
+        server ${EVILGINX_BACKEND}:443;
     }
 
     upstream gophish_backend {
-        server gophish:443;
+        server ${GOPHISH_BACKEND}:443;
     }
 
     upstream nginx_http_backend {

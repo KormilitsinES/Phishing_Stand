@@ -34,3 +34,5 @@ if [ ! -f "certs/live/$BASE_DOMAIN/fullchain.pem" ]; then
   exit 1
 fi
 echo -e "${GREEN}[+] Wildcard-сертификат успешно получен!${NC}"
+
+chmod 744 certs/archive/$BASE_DOMAIN/*
