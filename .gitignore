@@ -3,3 +3,9 @@ docker-compose.yml
 TODO
 .idea
 .venv
+evilginx2/data/*
+evilginx2/phishlets/*
+gophish/gophish.db
+postfix/dkim/*
+.env
+.deploy_state

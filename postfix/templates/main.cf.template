@@ -4,13 +4,15 @@ append_dot_mydomain = no
 readme_directory = no
 compatibility_level = 3.6
 
+smtp_host_lookup = native
+
 smtpd_tls_cert_file=/etc/postfix/certs/fullchain.pem
 smtpd_tls_key_file=/etc/postfix/certs/privkey.pem
 smtpd_tls_security_level=may
 
 smtp_tls_CApath=/etc/ssl/certs
 smtp_tls_security_level=may
-smtp_tls_session_cache_database = lmdb:${data_directory}/smtp_scache
+smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache
 
 smtpd_relay_restrictions = permit_mynetworks permit_sasl_authenticated defer_unauth_destination
 
@@ -18,8 +20,8 @@ myhostname = ${HOSTNAME}
 mydomain = ${ALLOWED_SENDER_DOMAINS}
 myorigin = $mydomain
 
-alias_maps = lmdb:/etc/aliases
-alias_database = lmdb:/etc/aliases
+alias_maps = hash:/etc/aliases
+alias_database = hash:/etc/aliases
 mydestination = localhost.${ALLOWED_SENDER_DOMAINS}, localhost, ${ALLOWED_SENDER_DOMAINS}
 
 relayhost =
@@ -35,5 +37,5 @@ header_checks = regexp:/etc/postfix/header_checks
 milter_default_action = accept
 milter_protocol = 2
 
-smtpd_milters = inet:milter:8892 inet:localhost:8891
-non_smtpd_milters = inet:milter:8892 inet:localhost:8891
+smtpd_milters = inet:milter:8892 inet:127.0.0.1:8891
+non_smtpd_milters = inet:milter:8892 inet:127.0.0.1:8891

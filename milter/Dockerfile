@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir pymilter
 
 COPY gophish_milter.py /app/gophish_milter.py
+
 RUN chmod +x /app/gophish_milter.py
 
 CMD ["python3", "/app/gophish_milter.py"]

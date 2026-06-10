@@ -1,52 +1,58 @@
-#!/usr/bin/env python3
 import Milter
 import uuid
-import socket
 import logging
 import sys
+import re
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
 
 class GoPhishMilter(Milter.Milter):
     def __init__(self):
         self.message_id = None
+        self.new_message_id = None
+        self.base_fqdn = "mx01.yandex.com"
         self.id = Milter.uniqueID()
 
-    # Этот метод вызывается для каждого заголовка письма
-    @Milter.nocallback
     def header(self, name, value):
         if name.lower() == 'message-id':
             self.message_id = value
-            # Проверяем, содержит ли Message-ID признаки GoPhish
-            if 'gophish' in value.lower() or '@gophish' in value.lower():
-                # Генерируем новый Message-ID в стиле Outlook
-                # Формат: <UUID@hostname>
-                new_message_id = f"<{str(uuid.uuid4())}@{socket.getfqdn()}>"
-                self.replace_header(name, new_message_id)
-                logging.info(f"Replaced Message-ID: {value} -> {new_message_id}")
+
+            local_part = value.split('@')[0].strip('<> ')
+            fqdn_part = value.split('@')[1].strip('<> ')
+
+            is_numeric_dotted = re.match(r'^\d+(\.\d+)+$', local_part)
+
+            if 'gophish' in value.lower() or is_numeric_dotted:
+                self.new_message_id = f"<{str(uuid.uuid4())}@{fqdn_part}>"
+                logging.info(f"Marked Message-Id for replacement: {value} -> {self.new_message_id}")
+
         return Milter.CONTINUE
 
-    # Этот метод вызывается в конце SMTP-транзакции, когда письмо полностью принято
     def eom(self):
-        # Если Message-ID не был изменен (например, его вообще не было), добавляем свой
-        if not self.message_id:
-            new_message_id = f"<{str(uuid.uuid4())}@{socket.getfqdn()}>"
-            self.addheader('Message-ID', new_message_id)
-            logging.info( f"Added new Message-ID: {new_message_id}")
+        if self.new_message_id:
+            self.chgheader('Message-Id', 1, self.new_message_id)
+            logging.info(f"Successfully replaced Message-Id in eom")
+
+        elif not self.message_id:
+            new_message_id = f"<{str(uuid.uuid4())}@{self.base_fqdn}>"
+            self.addheader('Message-Id', new_message_id)
+            logging.info(f"Added new Message-Id: {new_message_id}")
+
         return Milter.ACCEPT
 
+
 def main():
-    # Путь к сокету, через который Postfix будет общаться с milter'ом
     socket_name = "inet:8892@0.0.0.0"
 
-    # Регистрируем milter
     Milter.factory = GoPhishMilter
     Milter.set_flags(Milter.ADDHDRS | Milter.CHGHDRS)
 
     print(f"Starting GoPhish Milter on {socket_name}")
     sys.stdout.flush()
 
-    # Запускаем milter в бесконечном цикле
     Milter.runmilter("gophishmilter", socket_name, 60)
     print("Milter shutdown")
+
 
 if __name__ == "__main__":
     main()
