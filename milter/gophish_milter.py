@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 import Milter
-import time
 import uuid
 import socket
+import logging
 import sys
 
 class GoPhishMilter(Milter.Milter):
@@ -21,7 +21,7 @@ class GoPhishMilter(Milter.Milter):
                 # Формат: <UUID@hostname>
                 new_message_id = f"<{str(uuid.uuid4())}@{socket.getfqdn()}>"
                 self.replace_header(name, new_message_id)
-                Milter.log(Milter.LOGINFO, f"Replaced Message-ID: {value} -> {new_message_id}")
+                logging.info(f"Replaced Message-ID: {value} -> {new_message_id}")
         return Milter.CONTINUE
 
     # Этот метод вызывается в конце SMTP-транзакции, когда письмо полностью принято
@@ -30,7 +30,7 @@ class GoPhishMilter(Milter.Milter):
         if not self.message_id:
             new_message_id = f"<{str(uuid.uuid4())}@{socket.getfqdn()}>"
             self.addheader('Message-ID', new_message_id)
-            Milter.log(Milter.LOGINFO, f"Added new Message-ID: {new_message_id}")
+            logging.info( f"Added new Message-ID: {new_message_id}")
         return Milter.ACCEPT
 
 def main():
