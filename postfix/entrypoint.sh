@@ -23,6 +23,13 @@ echo "[+] SigningTable успешно сгенерирован для домен
 
 KEYFILE="/etc/opendkim/keys/${ALLOWED_SENDER_DOMAINS}.private"
 
+for keyfile in /etc/opendkim/keys/*.private; do
+    if [ -f "$keyfile" ]; then
+        chown opendkim:opendkim "$keyfile"
+        chmod 600 "$keyfile"
+    fi
+done
+
 if [ ! -f "$KEYFILE" ]; then
 
     echo "[*] Генерация DKIM-ключей..."
