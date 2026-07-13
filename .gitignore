@@ -9,3 +9,5 @@ gophish/gophish.db
 postfix/dkim/*
 .env
 .deploy_state
+export_temp_*/
+phishing_stand_export_*.tar.gz*
