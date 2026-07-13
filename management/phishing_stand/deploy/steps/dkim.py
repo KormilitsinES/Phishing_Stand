@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from phishing_stand.deploy.steps.base import Step
-from phishing_stand.logger import console
+from phishing_stand.logger import get_logger
 from phishing_stand.utils import run
 
 
@@ -102,19 +102,19 @@ class DKIMStep(Step):
         else:
             txt_value = content.strip()
 
-        console().print()
-        console().print(
+        print()
+        print(
             f"[bold cyan]DKIM TXT-запись для DNS:[/]\n"
             f"  Имя:  [yellow]{selector}._domainkey.{self.settings.BASE_DOMAIN}[/]\n"
             f"  Тип:  [yellow]TXT[/]\n"
             f"  Значение:\n"
             f"    [green]{txt_value}[/]"
         )
-        console().print()
-        console().print(
+        print()
+        print(
             "[bold]Также добавьте MX-запись:[/]\n"
             f"  Имя:  [yellow]{self.settings.BASE_DOMAIN}[/]\n"
             f"  Тип:  [yellow]MX[/]\n"
             f"  Значение: [green]10 {self.settings.MX_DOMAIN}.[/]"
         )
-        console().print()
+        print()

@@ -26,7 +26,6 @@ POSTFIX_BACKEND=postfix
 EVILGINX_BACKEND=evilginx2
 """
 
-
 class GenerateEnvStep(Step):
     name = "generate_env"
     description = "Генерация конфигурации (.env)"
@@ -34,7 +33,6 @@ class GenerateEnvStep(Step):
     requires_root = False
 
     def execute(self) -> bool:
-        # 1. Если файл есть, просто читаем и валидируем его. Это самый частый сценарий.
         if ENV_FILE.exists():
             log.info("Файл .env найден, проверяю его валидность...")
             try:
@@ -46,7 +44,6 @@ class GenerateEnvStep(Step):
                 print("Удалите или исправьте файл .env и запустите скрипт снова.")
                 return False
 
-        # 2. Если файла нет, проверяем, можем ли мы спросить пользователя
         if not sys.stdin.isatty():
             log.error("Неинтерактивный режим: файл .env не найден.")
             log.error("Создайте файл .env вручную перед запуском.")
@@ -57,7 +54,6 @@ class GenerateEnvStep(Step):
         print("(Нажмите Enter, чтобы принять значение по умолчанию)\n")
 
         data = self._interactive_prompt()
-
         try:
             self.settings = Settings.model_validate(data)
         except Exception as e:
@@ -71,7 +67,6 @@ class GenerateEnvStep(Step):
 
     def _interactive_prompt(self) -> dict[str, str]:
         data: dict[str, str] = {}
-
         base_default = getattr(self, "settings", None)
         base_default = base_default.BASE_DOMAIN if base_default else ""
 
@@ -83,7 +78,6 @@ class GenerateEnvStep(Step):
         data["mx_domain"] = self._prompt("Домен для почтового шлюза (MX)", f"mail.{base}", self._is_valid_domain)
         data["admin_email"] = self._prompt("Email администратора", f"admin@{base}", self._is_valid_email)
         data["vps_ip"] = self._prompt("Публичный IP-адрес сервера", self._detect_public_ip(), self._is_valid_ip)
-
         return data
 
     def _prompt(self, message: str, default: str, validator) -> str:

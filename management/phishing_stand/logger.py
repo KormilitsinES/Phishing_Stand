@@ -17,14 +17,12 @@ logging.setLoggerClass(_SuccessLogger)
 def setup_logging(verbose: bool = False) -> None:
     """Инициализирует простое текстовое логирование."""
     level = logging.DEBUG if verbose else logging.INFO
-
-    # Простой, читаемый формат, который отлично работает в любом терминале и логах
     logging.basicConfig(
         level=level,
         format="[%(asctime)s] %(levelname)-8s | %(message)s",
         datefmt="%H:%M:%S",
         stream=sys.stdout,
-        force=True, # Перезаписываем любые предыдущие настройки
+        force=True,
     )
 
 def get_logger(name: str | None = None) -> logging.Logger:

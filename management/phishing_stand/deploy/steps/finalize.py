@@ -6,7 +6,7 @@ from rich.panel import Panel
 from rich.table import Table
 
 from phishing_stand.deploy.steps.base import Step
-from phishing_stand.logger import console, console_out
+from phishing_stand.logger import get_logger
 from phishing_stand.utils import compose_command, run
 
 
@@ -64,11 +64,11 @@ class FinalizeStep(Step):
             "—",
         )
 
-        console_out().print()
-        console_out().print(table)
+        print()
+        print(table)
 
-        console_out().print()
-        console_out().print(
+        print()
+        print(
             Panel(
                 "[bold]Важные инструкции:[/]\n\n"
                 "1. [cyan]Настройте DNS-записи[/]:\n"
