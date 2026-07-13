@@ -305,8 +305,22 @@ def export_data():
     archive_path = PARENT_DIR / EXPORT_ARCHIVE_NAME
 
     files_to_include = []
+
+    # 1. Обработка сертификатов: разыменовываем ссылки и сохраняем только нужные файлы
+    certs_live_dir = PARENT_DIR / "certs" / "live"
+    if certs_live_dir.exists():
+        for domain_dir in certs_live_dir.iterdir():
+            if domain_dir.is_dir():
+                for cert_file in ["fullchain.pem", "privkey.pem", "cert.pem", "chain.pem"]:
+                    file_path = domain_dir / cert_file
+                    if file_path.exists() and file_path.is_file():
+                        real_path = file_path.resolve()
+                        # Правильный путь внутри архива
+                        arc_name = f"certs/live/{domain_dir.name}/{cert_file}"
+                        files_to_include.append((real_path, arc_name))
+
+    # 2. Остальные пути для экспорта
     paths_to_check = [
-        PARENT_DIR / "certs",
         PARENT_DIR / "evilginx2" / "data",
         PARENT_DIR / "evilginx2" / "phishlets",
         PARENT_DIR / "gophish" / "gophish.db",
@@ -316,15 +330,28 @@ def export_data():
 
     for path in paths_to_check:
         if path.exists():
-            files_to_include.append(path)
+            # Вычисляем относительный путь от SCRIPT_DIR
+            arc_name = str(path.relative_to(PARENT_DIR))
+            files_to_include.append((path, arc_name))
 
     if not files_to_include:
         print("[-] Нет данных для экспорта.")
         return
 
     with tarfile.open(archive_path, "w:gz") as tar:
-        for path in files_to_include:
-            tar.add(path, arcname=path.name)
+        for src_path, arcname in files_to_include:
+            if src_path.is_dir():
+                # Директории добавляем с сохранением структуры
+                tar.add(src_path, arcname=arcname)
+            else:
+                # Для файлов создаем метаданные на основе реального файла
+                info = tar.gettarinfo(name=str(src_path), arcname=arcname)
+                info.uid = 0
+                info.gid = 0
+                info.uname = "root"
+                info.gname = "root"
+                with open(src_path, "rb") as f:
+                    tar.addfile(info, f)
 
     print(f"[+] Экспорт успешно завершен: {archive_path}")
 
@@ -341,12 +368,20 @@ def import_data():
         return False
 
     print("[*] Распаковка архива...")
-    with tarfile.open(archive_path, "r:gz") as tar:
-        # Используем стандартный extractall. Для Python 3.12+ можно добавить filter='data' для безопасности
-        try:
-            tar.extractall(path=PARENT_DIR, filter='data')
-        except TypeError:
-            tar.extractall(path=PARENT_DIR)
+    try:
+        with tarfile.open(archive_path, "r:gz") as tar:
+            try:
+                # Теперь filter='data' абсолютно безопасен, так как в архиве
+                # больше нет символических ссылок, только обычные файлы
+                tar.extractall(path=PARENT_DIR, filter='data')
+            except TypeError:
+                # Python < 3.12: аргумент filter не поддерживается, извлекаем стандартно
+                tar.extractall(path=PARENT_DIR)
+    except Exception as e:
+        print(f"[-] Ошибка при распаковке архива: {e}")
+        print(f"[*] Вы можете распаковать архив вручную командой:")
+        print(f"    sudo tar -xzf {archive_path} -C {PARENT_DIR}")
+        return False
 
     print("[+] Данные успешно импортированы.")
     return True
