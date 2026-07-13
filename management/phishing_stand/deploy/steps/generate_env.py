@@ -1,0 +1,166 @@
+# phishing_stand/deploy/steps/generate_env.py
+"""Интерактивная генерация .env файла."""
+from __future__ import annotations
+
+import re
+from pathlib import Path
+from typing import Final
+
+import typer
+from rich.panel import Panel
+
+from phishing_stand.config import Settings
+from phishing_stand.deploy.steps.base import Step
+from phishing_stand.logger import console
+
+ENV_FILE: Final[Path] = Path(".env")
+
+# Шаблон .env
+ENV_TEMPLATE: Final[str] = """# Конфигурация стенда Phishing Stand
+# Сгенерировано автоматически — можно редактировать вручную
+
+# --- Домены ---
+BASE_DOMAIN={base_domain}
+TRACK_DOMAIN={track_domain}
+EVIL_DOMAIN={evil_domain}
+MX_DOMAIN={mx_domain}
+
+# --- Администратор ---
+ADMIN_EMAIL={admin_email}
+
+# --- Сеть ---
+VPS_IP={vps_ip}
+
+# --- Имена контейнеров (не менять без необходимости) ---
+GOPHISH_BACKEND=gophish
+POSTFIX_BACKEND=postfix
+EVILGINX_BACKEND=evilginx2
+"""
+
+
+class GenerateEnvStep(Step):
+    name = "generate_env"
+    description = "Генерация конфигурации (.env)"
+    depends_on = ["install_docker"]
+    requires_root = False  # Не требует root, но может потребоваться для записи
+
+    def execute(self) -> bool:
+        # 1. Если .env уже существует — используем его
+        if ENV_FILE.exists():
+            self.log.info(f"Файл {ENV_FILE} уже существует, использую его")
+            try:
+                # Валидируем существующий .env
+                self.settings = Settings.from_env_file(ENV_FILE)
+                self.log.success(f"Конфигурация загружена: {self.settings.BASE_DOMAIN}")
+                return True
+            except (ValueError, FileNotFoundError) as e:
+                self.log.warning(f"Текущий .env невалиден: {e}")
+                if not typer.confirm("Пересоздать .env?", default=False):
+                    return False
+
+        # 2. Интерактивный опрос
+        console().print(
+            Panel(
+                "[bold]Настройка конфигурации стенда[/]\n"
+                "Вам потребуется указать домены и IP-адрес сервера.\n"
+                "Все значения можно будет изменить позже в файле .env",
+                border_style="cyan",
+            )
+        )
+
+        data = self._interactive_prompt()
+
+        # 3. Валидация через Pydantic
+        try:
+            self.settings = Settings.model_validate(data)
+        except Exception as e:
+            self.log.error(f"Ошибка валидации конфигурации:\n{e}")
+            return False
+
+        # 4. Запись .env
+        content = ENV_TEMPLATE.format(**data)
+        ENV_FILE.write_text(content, encoding="utf-8")
+        ENV_FILE.chmod(0o600)  # Только для владельца
+
+        self.log.success(f"Конфигурация сохранена в {ENV_FILE}")
+        return True
+
+    def _interactive_prompt(self) -> dict[str, str]:
+        """Интерактивно собирает данные у пользователя."""
+        data: dict[str, str] = {}
+
+        # Базовый домен
+        data["base_domain"] = self._prompt_domain(
+            "Базовый домен (например, example.com)",
+            default=self.settings.BASE_DOMAIN if hasattr(self, "settings") else "",
+        )
+
+        # Поддомены (предлагаем дефолты на основе base_domain)
+        base = data["base_domain"]
+        data["track_domain"] = self._prompt_domain(
+            "Домен для трекинга Gophish",
+            default=f"t.{base}",
+        )
+        data["evil_domain"] = self._prompt_domain(
+            "Домен для Evilginx2",
+            default=f"e.{base}",
+        )
+        data["mx_domain"] = self._prompt_domain(
+            "Домен для почтового шлюза (MX)",
+            default=f"mail.{base}",
+        )
+
+        # Email
+        data["admin_email"] = self._prompt_email(
+            "Email администратора (для Let's Encrypt и уведомлений)",
+            default=f"admin@{base}",
+        )
+
+        # IP
+        data["vps_ip"] = self._prompt_ip(
+            "Публичный IP-адрес сервера",
+            default=self._detect_public_ip(),
+        )
+
+        return data
+
+    # ---------- Валидирующие промпты ----------
+    def _prompt_domain(self, message: str, default: str = "") -> str:
+        pattern = re.compile(
+            r"^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*\.[A-Za-z]{2,}$"
+        )
+        while True:
+            value = typer.prompt(message, default=default or None).strip().lower()
+            if pattern.match(value):
+                return value
+            console().print(f"[red]Некорректный домен:[/] {value}")
+
+    def _prompt_email(self, message: str, default: str = "") -> str:
+        pattern = re.compile(r"^[\w.+-]+@[\w-]+\.[\w.-]+$")
+        while True:
+            value = typer.prompt(message, default=default or None).strip().lower()
+            if pattern.match(value):
+                return value
+            console().print(f"[red]Некорректный email:[/] {value}")
+
+    def _prompt_ip(self, message: str, default: str = "") -> str:
+        pattern = re.compile(
+            r"^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$"
+        )
+        while True:
+            value = typer.prompt(message, default=default or None).strip()
+            if pattern.match(value):
+                return value
+            console().print(f"[red]Некорректный IPv4:[/] {value}")
+
+    def _detect_public_ip(self) -> str:
+        """Пытается определить публичный IP автоматически."""
+        from phishing_stand.utils import run
+
+        for url in ("https://api.ipify.org", "https://ifconfig.me", "https://icanhazip.com"):
+            r = run(["curl", "-fsSL", "--max-time", "5", url], check=False)
+            if r.ok and r.stdout.strip():
+                ip = r.stdout.strip()
+                self.log.debug(f"Определён публичный IP: {ip} (через {url})")
+                return ip
+        return ""
