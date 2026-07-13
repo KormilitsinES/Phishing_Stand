@@ -4,6 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from phishing_stand.deploy.steps.certbot import CertbotStep
+from phishing_stand.deploy.steps.dkim import DKIMStep
+from phishing_stand.deploy.steps.docker_compose import DockerComposeStep
+from phishing_stand.deploy.steps.finalize import FinalizeStep
 from phishing_stand.deploy.steps.generate_env import GenerateEnvStep
 from phishing_stand.deploy.steps.install_docker import InstallDockerStep
 from phishing_stand.deploy.steps.system_update import SystemUpdateStep
@@ -16,11 +20,10 @@ STEPS_REGISTRY: list[type["Step"]] = [
     SystemUpdateStep,
     InstallDockerStep,
     GenerateEnvStep,
-    # На следующих шагах добавим:
-    # CertbotStep,
-    # DockerComposeStep,
-    # DKIMStep,
-    # FinalizeStep,
+    CertbotStep,
+    DockerComposeStep,
+    DKIMStep,
+    FinalizeStep,
 ]
 
 __all__ = ["STEPS_REGISTRY"]

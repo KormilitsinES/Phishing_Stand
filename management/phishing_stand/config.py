@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 from typing import Final, Self
 
+from typing_extensions import Self
+
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 # Паттерны для валидации
