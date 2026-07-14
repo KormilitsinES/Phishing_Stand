@@ -247,7 +247,7 @@ def step_print_info():
     print(f" Имя: @ -> Значение: v=spf1 ip4:{vps_ip} -all")
     print()
 
-    dkim_file = PARENT_DIR / "postfix" / "dkim" / "default.txt"
+    dkim_file = PARENT_DIR / "postfix" / "dkim" / f"{base_domain}.txt"
     if dkim_file.exists():
         with open(dkim_file, "r") as f:
             content = f.read()
@@ -255,7 +255,7 @@ def step_print_info():
             if match:
                 dkim_value = match.group(1).replace(' ', '').replace('(', '').replace(')', '').replace('"', '').strip()
                 print("4. TXT-запись (DKIM):")
-                print(f" Имя: default._domainkey -> Значение: v=DKIM1; k=rsa; p={dkim_value}")
+                print(f" Имя: {base_domain}._domainkey -> Значение: v=DKIM1; k=rsa; p={dkim_value}")
             else:
                 print("[-] Предупреждение: Не удалось извлечь DKIM ключ. Проверьте: docker compose logs postfix")
     else:
