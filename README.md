@@ -100,6 +100,10 @@ sudo ./management.py
 ```
 Следуйте подсказкам на экране для ввода доменных имен и настройки DNS.
 
+<img width="682" height="648" alt="image" src="https://github.com/user-attachments/assets/5259e60b-3cab-421e-a666-d84cfff029fd" />
+
+<img width="1078" height="612" alt="image" src="https://github.com/user-attachments/assets/f2d9a2d0-7875-4e69-9847-e06905f770e8" />
+
 ---
 
 ## 📖 Подробная установка
@@ -215,11 +219,15 @@ ssh -L 3333:127.0.0.1:3333 root@<IP_VPS>
 https://127.0.0.1:3333
 ```
 
+<img width="1491" height="712" alt="image" src="https://github.com/user-attachments/assets/ac46fefe-ce80-479e-a5eb-9873b0d5b688" />
+
 ### Доступ к консоли Evilginx2
 ```
 docker exec -it evilginx2 sh
 ./evilginx -developer -p phishlets/
 ```
+
+<img width="969" height="712" alt="image" src="https://github.com/user-attachments/assets/4b06a32d-b6a7-456b-9a9c-8c95e158b981" />
 
 ---
 
