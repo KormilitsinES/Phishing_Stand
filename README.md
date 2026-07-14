@@ -48,6 +48,13 @@
 ## 🏗️ Архитектура
 
 Стенд состоит из 5 основных компонентов, объединенных в изолированную Docker-сеть:
+
+1. **Gophish** - платформа для управления фишинговыми кампаниями.
+2. **Evilginx2** - MITM-фреймворк для перехвата учетных данных, включая MFA.
+3. **Milter** - фильтр для корректировки SMTP заголовков.
+4. **Postfix** - почтовый сервер для отправки фишинговых сообщений.
+5. **Nginx** - обратный прокси-сервер с SSL/TLS для приема входящих запросов.
+
 <img width="2100" height="1036" alt="Phishing_Stand" src="https://github.com/user-attachments/assets/e407d8cc-e0f9-471d-a79b-2ec8ca5e0ce8" />
 
 ---
@@ -81,7 +88,7 @@
 Выполните следующие команды для обновления системы и загрузки исходного кода проекта:
 ```commandline
 apt update && apt install git -y
-git clone https://github.com/KormilitsinES/Phishing_Stand.git
+git clone https://github.com/EfraimDiveroli-Pwn3d/Phishing_Stand.git
 cd Phishing_Stand
 ```
 
@@ -103,6 +110,16 @@ sudo ./management.py
 4. **get_certs**: запуск Certbot в ручном режиме. Внимание: На этом этапе скрипт попросит вас добавить TXT-запись _acme-challenge у вашего DNS-провайдера. Для этого внесите запись, проверьте ее через dig и нажмите ENTER для продолжения.
 5. **build_run**: сборка образов и запуск контейнеров (milter, postfix, nginx, evilginx2, gophish).
 6. **print_info**: финальный вывод сгенерированных DNS-записей, URL-адресов и временного пароля администратора Gophish.
+
+В процессе конфигурации доменов вам будет предложено ввести:
+
+| Параметр       | Пример                  | Описание                   |
+| -------------- | ----------------------- | -------------------------- |
+| `BASE_DOMAIN`  | `my-domain.com`         | Базовый домен              |
+| `TRACK_DOMAIN` | `track.my-domain.com`   | Домен для трекинга Gophish |
+| `EVIL_DOMAIN`  | `phish.my-domain.com`   | Домен для Evilginx2        |
+| `MX_DOMAIN`    | `mail.my-domain.com`    | Почтовый домен             |
+| `ADMIN_EMAIL`  | `support@my-domain.com` | Email для Let's Encrypt    |
 
 ---
 
