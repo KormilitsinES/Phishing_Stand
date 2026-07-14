@@ -48,6 +48,7 @@
 ## 🏗️ Архитектура
 
 Стенд состоит из 5 основных компонентов, объединенных в изолированную Docker-сеть:
+<img width="2100" height="1036" alt="Phishing_Stand" src="https://github.com/user-attachments/assets/e407d8cc-e0f9-471d-a79b-2ec8ca5e0ce8" />
 
 ---
 
