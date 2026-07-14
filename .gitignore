@@ -11,3 +11,5 @@ postfix/dkim/*
 .deploy_state
 export_temp_*/
 phishing_stand_export_*.tar.gz*
+application.log
+*.tar.gz
