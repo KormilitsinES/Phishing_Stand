@@ -34,7 +34,7 @@ def log(message: str, logfile: str = LOG_FILE) -> None:
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     line = f"[{timestamp}] {message}"
 
-    print(line)
+    print(message)
 
     with open(logfile, "a", encoding="utf-8") as f:
         f.write(line + "\n")
@@ -216,7 +216,7 @@ def step_get_certs():
     log("-------------------------------------------------------")
     input("Нажмите ENTER, когда будете готовы увидеть challenge-запрос...")
 
-    log("\n[*] Запуск Certbot...")
+    log("[*] Запуск Certbot...")
     admin_email = os.environ.get("ADMIN_EMAIL", "support@my-domain.com")
     cmd = [
         "docker", "run", "-it", "--rm",
@@ -255,7 +255,7 @@ def generate_value() -> str:
 
 
 def step_print_info():
-    log("\n=======================================================")
+    log("=======================================================")
     log(" СТЕНД УСПЕШНО РАЗВЕРНУТ!")
     log("=======================================================")
 
@@ -308,7 +308,7 @@ def step_print_info():
         log("[-] Предупреждение: Файл DKIM ключа не найден. Проверьте: docker compose logs postfix")
     log("-------------------------------------------------------")
 
-    log("\n=== Учетные данные GoPhish ===")
+    log("=== Учетные данные GoPhish ===")
     log("[*] Извлечение пароля из логов GoPhish...")
     time.sleep(5)
 
@@ -336,14 +336,14 @@ def step_print_info():
         log("[-] Не удалось автоматически извлечь пароль GoPhish из логов.")
         log("[*] Пожалуйста, проверьте логи вручную: docker compose logs gophish | grep -i password")
 
-    log("\nПолезные команды:")
+    log("Полезные команды:")
     log(" - Доступ к админке GoPhish (через SSH-туннель):")
     log(f" ssh -L 3333:127.0.0.1:3333 root@{vps_ip}")
     log(" Затем откройте в браузере: https://127.0.0.1:3333")
     log('')
     log(" - Доступ к консоли Evilginx2 (через docker exec):")
     log(f" docker exec -it {evilginx_backend} sh")
-    log(f" Затем в терминале сервиса {evil_domain}: ./evilginx --developer -p phishlets/")
+    log(f" Затем в терминале сервиса {evilginx_backend}: ./evilginx --developer -p phishlets/")
     log('')
     log(" - Просмотр логов: docker compose logs -f [имя_сервиса]")
     log("=======================================================")
@@ -503,7 +503,7 @@ def main():
             log(f"[+] Шаг {step_num} ({step_name}) уже выполнен. Пропускаем.")
             continue
 
-        log(f"\n=======================================================")
+        log(f"=======================================================")
         log(f" Выполнение шага {step_num}: {step_desc}")
         log(f"=======================================================")
 
