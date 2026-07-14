@@ -377,6 +377,12 @@ def import_data():
             except TypeError:
                 # Python < 3.12: аргумент filter не поддерживается, извлекаем стандартно
                 tar.extractall(path=PARENT_DIR)
+
+        db_file = PARENT_DIR / "gophish" / "gophish.db"
+        if not db_file.exists():
+            db_file.touch()
+        os.chmod(db_file, 0o666)
+
     except Exception as e:
         print(f"[-] Ошибка при распаковке архива: {e}")
         print(f"[*] Вы можете распаковать архив вручную командой:")
