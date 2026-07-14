@@ -102,6 +102,7 @@ sudo ./management.py
 
 <img width="682" height="648" alt="image" src="https://github.com/user-attachments/assets/5259e60b-3cab-421e-a666-d84cfff029fd" />
 
+
 <img width="1078" height="612" alt="image" src="https://github.com/user-attachments/assets/f2d9a2d0-7875-4e69-9847-e06905f770e8" />
 
 ---
