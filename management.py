@@ -17,7 +17,7 @@ PARENT_DIR = Path(__file__).parent.resolve()
 STATE_FILE = PARENT_DIR / ".deploy_state"
 ENV_FILE = PARENT_DIR / ".env"
 EXPORT_ARCHIVE_NAME = "phishing_stand_backup.tar.gz"
-LOG_FILE = "application.log"
+LOG_FILE = PARENT_DIR / "application.log"
 
 
 STEPS = [
