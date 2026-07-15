@@ -50,8 +50,6 @@ services:
     restart: unless-stopped
     stdin_open: true
     tty: true
-    ports:
-      - "127.0.0.1:33333:33333"
     volumes:
       - ./evilginx2/phishlets:/app/phishlets:ro
       - ./evilginx2/data:/root/.evilginx
