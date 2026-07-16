@@ -308,6 +308,10 @@ def step_print_info():
                 log("[-] Предупреждение: Не удалось извлечь DKIM ключ. Проверьте: docker compose logs postfix")
     else:
         log("[-] Предупреждение: Файл DKIM ключа не найден. Проверьте: docker compose logs postfix")
+
+    log('')
+    log("8. PTR-запись (обратная зона DNS) почтового сервера:")
+    log(f" Имя: {vps_ip} -> Значение: {mx_domain}")
     log("-------------------------------------------------------")
 
     log('')
